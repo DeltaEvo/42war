@@ -1,17 +1,26 @@
 <template>
     <div id="filler-run">
         <div class="view">
-            <canvas-view :data="data" :turn="turn"></canvas-view>
-            <slide-bar class="slider" v-model="turn" :max="data.turns.length" :speed="isPlaying ? 0 : 0.3"/>
-            <div v-for="(score, i) in scoresAtTurn" :key="i">
-                {{data.players[i]}} ({{colors[i]}}): {{score}}
+            <canvas-view :data="data" :turn="turn" class="canvas"></canvas-view>
+            <div class="menu">
+                <slide-bar class="slider" v-model="turn" :max="data.turns.length" :speed="isPlaying ? 0 : 0.3"/>
+                <button @click="play">
+                    Play
+                </button>
+                <button @click="pause">
+                    Pause
+                </button>
             </div>
-            <button @click="play">
-                Play
-            </button>
-            <button @click="pause">
-                Pause
-            </button>
+        </div>
+        <div class="scores">
+            <div
+                v-for="(score, i) in scoresAtTurn"
+                :key="i"
+                class="score"
+                :style="`background-color: ${colors[i]}; flex-grow: ${score+1};`"
+            >
+                {{score}}
+            </div>
         </div>
         <div class="console">
         </div>
@@ -69,9 +78,32 @@ export default {
 
         & > .view {
             flex: 3;
+            overflow: hidden;
 
-            & > .slider {
-                padding: 1em;
+            & > .canvas {
+                height: 80%;
+            }
+
+            & > .menu {
+                padding: 0 1em;
+                height: 20%;
+            }
+        }
+
+        & > .scores {
+            flex: 0.2;
+            display: flex;
+            flex-direction: column;
+
+            & > .score {
+                flex: 1;
+                transition: flex-grow 1s;
+                color: white;
+                font-weight: bold;
+                height: 100%;
+                display: flex;
+                justify-content: center;
+                flex-direction: column;
             }
         }
 

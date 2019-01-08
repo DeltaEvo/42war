@@ -1,5 +1,5 @@
 <template>
-    <canvas class="canvas">
+    <canvas>
     </canvas>
 </template>
 
@@ -75,9 +75,4 @@ export default {
 </script>
 
 <style lang="stylus">
-    .canvas {
-        width: 100%;
-        border: 2px solid black;
-        box-sizing: border-box;
-    }
 </style>
