@@ -1,9 +1,9 @@
-<template>
-    <div id="filler-run">
+`<template>
+    <div v-if="data" id="filler-run">
         <div class="view">
             <canvas-view :data="data" :turn="turn" class="canvas"></canvas-view>
             <div class="menu">
-                <slide-bar class="slider" v-model="turn" :max="data.turns.length" :speed="isPlaying ? 0 : 0.3"/>
+                <slide-bar class="slider" v-model="turn" :max="data.turns.length" :is-disabled="!data.ended" :speed="isPlaying ? 0 : 0.3"/>
                 <button @click="play">
                     Play
                 </button>
@@ -25,6 +25,7 @@
         <div class="console">
         </div>
     </div>
+    <span v-else>Loading</span>
 </template>
 
 <script>
@@ -32,13 +33,38 @@ import CanvasView, { COLORS } from "../components/CanvasView.vue";
 import SlideBar from "vue-slide-bar";
 
 export default {
+  props: ["id"],
   data() {
     return {
       turn: 0,
-      data: require("../../turns.json"),
+      data: null,
       colors: COLORS,
       isPlaying: false
     };
+  },
+  async mounted() {
+    const { turns, ended, players, map } = await fetch(
+      `/api/run/${this.id}`
+    ).then(res => res.json());
+    this.data = {
+      turns,
+      players,
+      ended,
+      map
+    };
+    if (!ended) {
+      const events = new EventSource(`/api/run/${this.id}/stream`);
+      this.turn = turns.length;
+      this.isPlaying = true;
+      events.addEventListener("message", ({ data }) => {
+        this.data.turns.push(JSON.parse(data));
+        this.turn++;
+      });
+      events.addEventListener("close", () => {
+        this.data.ended = true;
+        this.isPlaying = false;
+      });
+    }
   },
   computed: {
     scoresAtTurn() {
@@ -54,13 +80,13 @@ export default {
       this.turn = 0;
       this.interval = setInterval(() => {
         this.turn++;
-        if (this.turn > this.data.turns.length) this.pause();
+        if (this.turn >= this.data.turns.length) this.pause();
       }, 50);
     },
     pause() {
       if (this.interval) clearInterval(this.interval);
       this.interval = null;
-      this.isPlaying = 0;
+      this.isPlaying = false;
     }
   },
   components: {
@@ -77,27 +103,28 @@ export default {
         display: flex;
 
         & > .view {
-            flex: 3;
             overflow: hidden;
+            padding: 20px;
+            flex: 1;
 
             & > .canvas {
-                height: 80%;
+                height: calc(100% - 100px);
+                background: #f7f9f9;
             }
 
             & > .menu {
-                padding: 0 1em;
-                height: 20%;
+                height: 100px;
             }
         }
 
         & > .scores {
-            flex: 0.2;
+            width: 100px;
             display: flex;
             flex-direction: column;
 
             & > .score {
                 flex: 1;
-                transition: flex-grow 1s;
+                transition: flex-grow 250ms;
                 color: white;
                 font-weight: bold;
                 height: 100%;
@@ -108,8 +135,9 @@ export default {
         }
 
         & > .console {
-            flex: 1;
+            width: 400px;
             background-color: black;
         }
     }
 </style>
+`

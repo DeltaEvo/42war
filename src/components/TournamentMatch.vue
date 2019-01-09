@@ -13,7 +13,7 @@
             <icon
                 icon="play"
                 class="play"
-                @click="$router.push({ name: 'run' })"
+                @click="$emit('run')"
             />
         </div>
     </div>
@@ -38,6 +38,8 @@ export default {
         & > .players {
             flex: 2;
             & > .player {
+                height: 25px;
+                line-height: 25px;
                 color: $gray;
                 border-left: 5px solid $gray;
                 width: 100%;

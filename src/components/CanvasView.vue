@@ -45,7 +45,6 @@ export default {
         for (const [x, char] of [...line].entries())
           if (char !== ".") {
             const player = "OX".indexOf(char);
-            console.log("Draw", player);
             this.context.fillStyle = COLORS[player];
             this.context.beginPath();
             const size = cell_width / 2;

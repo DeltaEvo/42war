@@ -1,9 +1,18 @@
 <template>
-  <div class="home">
+  <div id="home">
     <Tournament :matchs="matchs">
       <template slot-scope="{ i, j, match }">
-        <input v-if="i ==0" style="width: 175px;" v-model="m[j].name">
-        <tournament-match v-else :match="match"></tournament-match>
+        <div v-if="i == 0" style="width: 175px;">
+          <multi-select v-model="m[j]" :options="players" placeholder="Select player" track-by="name" label="name" :showLabels="false">
+            <template slot="singleLabel" slot-scope="{ option }">
+              <div class="select-option">
+                <img :src="option.image">
+                <span>{{ option.name }}</span>
+              </div>
+            </template>
+          </multi-select>
+        </div>
+        <tournament-match v-else @run="run(match)" :match="match"></tournament-match>
       </template>
     </Tournament>
     <button @click="add">Add</button>
@@ -14,13 +23,21 @@
 // @ is an alias to /src
 import Tournament from "@/components/Tournament.vue";
 import TournamentMatch from "@/components/TournamentMatch.vue";
+import MultiSelect from "vue-multiselect";
+import "vue-multiselect/dist/vue-multiselect.min.css";
 
 export default {
   name: "home",
   data() {
     return {
-      m: []
+      m: [],
+      players: []
     };
+  },
+  mounted() {
+    fetch("/api/players")
+      .then(res => res.json())
+      .then(players => (this.players = players));
   },
   computed: {
     matchs() {
@@ -53,25 +70,55 @@ export default {
   },
   components: {
     Tournament,
-    TournamentMatch
+    TournamentMatch,
+    MultiSelect
   },
   methods: {
     add() {
       if (this.m.length == 0) {
-        this.m.push({
-          name: "lul"
-        });
-        this.m.push({
-          name: "lol"
-        });
+        this.m.push(null);
+        this.m.push(null);
       } else {
         const len = this.m.length;
-        for (let i = 0; i < len; i++)
-          this.m.push({
-            name: "blu"
-          });
+        for (let i = 0; i < len; i++) this.m.push(null);
       }
+    },
+    run(match) {
+      fetch("/api/run", {
+        body: JSON.stringify({
+          players: match.oponents.map(({ name }) => name)
+        }),
+        headers: {
+          "content-type": "application/json"
+        },
+        method: "POST"
+      })
+        .then(res => res.json())
+        .then(({ id }) => {
+          this.$router.push({ name: "run", params: { id } });
+        });
     }
   }
 };
 </script>
+<style lang="stylus">
+  #home {
+    .multiselect__input {
+      max-width: 150px;
+    }
+    .select-option {
+      display: flex;
+      align-items: center;
+
+      & > img {
+        height: 25px;
+        width: 25px;
+        object-fit: cover;
+        border-radius: 50%;
+      }
+      & > span {
+        padding: 0 1em;
+      }
+    }
+  }
+</style>

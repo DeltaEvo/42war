@@ -15,9 +15,10 @@ export default new Router({
       component: Home
     },
     {
-      path: "/run/",
+      path: "/run/:id",
       name: "run",
-      component: FillerRun
+      component: FillerRun,
+      props: true
     },
     {
       path: "/about",
