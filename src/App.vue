@@ -1,5 +1,8 @@
 <template>
   <div id="app">
+    <nav id="nav">
+      Lol
+    </nav>
     <router-view/>
   </div>
 </template>
@@ -14,12 +17,9 @@ body
   color #2c3e50
   background #f0f2f2
   min-height 100vh
+  display: flex
 
 #nav
-  padding 30px
-  a
-    font-weight bold
-    color #2c3e50
-    &.router-link-exact-active
-      color #42b983
+  width: 100px;
+  background: red;
 </style>

@@ -3,13 +3,8 @@
         <div class="view">
             <canvas-view :data="data" :turn="turn" class="canvas"></canvas-view>
             <div class="menu">
-                <slide-bar class="slider" v-model="turn" :max="data.turns.length" :is-disabled="!data.ended" :speed="isPlaying ? 0 : 0.3"/>
-                <button @click="play">
-                    Play
-                </button>
-                <button @click="pause">
-                    Pause
-                </button>
+                <icon class="icon" :icon="isPlaying ? 'pause' : 'play'" @click="isPlaying ? pause() : play()"/>
+                <slide-bar class="slider" v-model="turn" :max="data.turns.length - 1" :is-disabled="!data.ended" :speed="isPlaying ? 0 : 0.3"/>
             </div>
         </div>
         <div class="scores">
@@ -47,24 +42,33 @@ export default {
       `/api/run/${this.id}`
     ).then(res => res.json());
     this.data = {
-      turns,
+      turns: [],
       players,
       ended,
       map
     };
     if (!ended) {
-      const events = new EventSource(`/api/run/${this.id}/stream`);
-      this.turn = turns.length;
+      const events = new EventSource(
+        `/api/run/${this.id}/stream?last-event-id=${turns.length}`
+      );
+      const queue = turns;
+      setTimeout(() => {
+        const interval = setInterval(() => {
+          if (queue.length) {
+            this.data.turns.push(queue.shift());
+            this.turn = this.data.turns.length - 1;
+          } else if (this.data.ended) clearInterval(interval);
+        }, 50);
+      }, 1000);
       this.isPlaying = true;
-      events.addEventListener("message", ({ data }) => {
-        this.data.turns.push(JSON.parse(data));
-        this.turn++;
-      });
+      events.addEventListener("message", ({ data }) =>
+        queue.push(JSON.parse(data))
+      );
       events.addEventListener("close", () => {
         this.data.ended = true;
         this.isPlaying = false;
       });
-    }
+    } else this.data.turns = turns;
   },
   computed: {
     scoresAtTurn() {
@@ -77,13 +81,14 @@ export default {
   methods: {
     play() {
       this.isPlaying = true;
-      this.turn = 0;
+      if (this.turn >= this.data.turns.length - 1) this.turn = 0;
       this.interval = setInterval(() => {
         this.turn++;
         if (this.turn >= this.data.turns.length) this.pause();
       }, 50);
     },
     pause() {
+      if (!this.data.ended) return;
       if (this.interval) clearInterval(this.interval);
       this.interval = null;
       this.isPlaying = false;
@@ -99,7 +104,7 @@ export default {
 <style lang="stylus">
     #filler-run {
         height: 100vh;
-        width: 100vw;
+        width: 100%;
         display: flex;
 
         & > .view {
@@ -108,17 +113,27 @@ export default {
             flex: 1;
 
             & > .canvas {
-                height: calc(100% - 100px);
+                height: calc(100% - 50px);
                 background: #f7f9f9;
             }
 
             & > .menu {
-                height: 100px;
+                display: flex;
+                align-items: flex-end;
+                height: 50px;
+                & > .icon:hover {
+                    color: #1066FD;
+                }
+
+                & > .slider {
+                    padding: 5px 10px;
+                    width: 100%;
+                }
             }
         }
 
         & > .scores {
-            width: 100px;
+            width: 60px;
             display: flex;
             flex-direction: column;
 
