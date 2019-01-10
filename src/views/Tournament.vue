@@ -15,7 +15,9 @@
         <tournament-match v-else @run="run(match)" :match="match"></tournament-match>
       </template>
     </Tournament>
-    <button @click="add">Add</button>
+    <button class="add" @click="add">
+      <icon icon="plus"/>
+    </button>
   </div>
 </template>
 
@@ -43,7 +45,7 @@ export default {
     matchs() {
       const res = [this.m];
       const len = this.m.length;
-      for (let i = 0; i < (Math.sqrt(len) | 0); i++) {
+      for (let i = 0; i < (Math.log2(len) | 0); i++) {
         const tab = [];
         for (let j = 0; j < res[i].length; j += 2) {
           const p1 =
@@ -103,6 +105,7 @@ export default {
 </script>
 <style lang="stylus">
   #home {
+    text-al
     .multiselect__input {
       max-width: 150px;
     }
@@ -119,6 +122,12 @@ export default {
       & > span {
         padding: 0 1em;
       }
+    }
+    .add {
+      display: block;
+      align-self: flex-start;
+      border: none;
+      padding: 0;
     }
   }
 </style>

@@ -1,13 +1,13 @@
 const Koa = require("koa");
 const Router = require("koa-router");
 const bodyParser = require("koa-bodyparser");
-const sse = require("koa-sse-stream");
 const { promises: fs } = require("fs");
 const path = require("path");
 const fetch = require("node-fetch");
 const runFiller = require("./vm");
 const EventEmiter = require("events");
 const uuid = require("uuid/v4");
+const { PassThrough } = require("stream");
 
 const app = new Koa();
 const router = new Router();
@@ -58,16 +58,19 @@ function runGame(players, id) {
       path.join(ROOT, "players", player + EXT)
     );
 
-    for await (const { turn } of runFiller(playersBinary, map)) {
+    for await (const { turn, error } of runFiller(playersBinary, map)) {
       if (turn) {
         game.events.emit("turn", turn);
         game.turns.push(turn);
-      }
+      } else if (error) game.events.emit("error", error);
     }
     game.events.emit("end");
     game.ended = true;
     game.events = null;
-  })();
+  })().catch(error => {
+    game.events.emit("vm-error", error);
+    return Promise.reject(error);
+  });
 }
 
 router.post("/run", bodyParser({ enableTypes: ["json"] }), async ctx => {
@@ -83,33 +86,50 @@ router.post("/run", bodyParser({ enableTypes: ["json"] }), async ctx => {
 router.get("/run/:id", async ctx => {
   const { id } = ctx.params;
   if (currentGames.has(id)) {
-    const { turns, ended, players, map: mapPromise } = currentGames.get(id);
+    const {
+      turns,
+      ended,
+      players: playerNames,
+      map: mapPromise
+    } = currentGames.get(id);
+    const players = await Promise.all(
+      playerNames.map(async name => ({
+        name,
+        image: await getImageUrl(name)
+      }))
+    );
     const map = await mapPromise;
     ctx.body = { turns, ended, players, map };
   } else ctx.status = 404;
 });
 
-router.get(
-  "/run/:id/stream",
-  sse({
-    maxClients: 5000,
-    pingInterval: 30000
-  }),
-  async ctx => {
-    const { id } = ctx.params;
-    const { ["last-event-id"]: lastEventId } = ctx.query;
-    if (currentGames.has(id)) {
-      const { turns, ended, events } = currentGames.get(id);
-      if (ended) ctx.status = 404;
-      else {
-        for (const turn of turns.slice(lastEventId))
-          ctx.sse.send(JSON.stringify(turn));
-        events.on("turn", turn => ctx.sse.send(JSON.stringify(turn)));
-        events.on("end", () => ctx.sse.end());
-      }
-    } else ctx.status = 404;
-  }
-);
+router.get("/run/:id/stream", async ctx => {
+  const { id } = ctx.params;
+  const { ["last-event-id"]: lastEventId } = ctx.query;
+
+  if (currentGames.has(id)) {
+    const { turns, ended, events } = currentGames.get(id);
+    if (ended) ctx.status = 404;
+    else {
+      const stream = new PassThrough();
+      const send = (event, data) => {
+        stream.write(`event:${event}\ndata: ${JSON.stringify(data)}\n\n`);
+      };
+      for (const turn of turns.slice(lastEventId)) send("turn", turn);
+      events.on("turn", turn => send("turn", turn));
+      events.on("error", error => send("error", error));
+      events.once("end", () => send("end"));
+      events.once("vm-error", error =>
+        send("vm-error", { message: error.message })
+      );
+      ctx.req.once("close", () => ctx.res.end());
+      ctx.req.once("finish", () => ctx.res.end());
+      ctx.req.once("error", () => ctx.res.end());
+      ctx.type = "text/event-stream";
+      ctx.body = stream;
+    }
+  } else ctx.status = 404;
+});
 
 app.use(router.routes()).use(router.allowedMethods());
 

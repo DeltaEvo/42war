@@ -26,11 +26,15 @@ function generatePiece(mapHeight, mapWidth) {
 }
 
 function isValid(map, piece, xo, yo, playerChar) {
+  const height = map.length;
+  const width = map[0].length;
   let overlap = false;
   for (const [y, line] of piece.entries())
     for (const [x, char] of [...line].entries())
       if (char === "*") {
-        if (map[yo + y][xo + x] === ".") continue;
+        if (yo + y > height || yo + y < 0 || xo + x > width || xo + x < 0)
+          return false;
+        else if (map[yo + y][xo + x] === ".") continue;
         else if (!overlap && map[yo + y][xo + x] == playerChar) overlap = true;
         else return false;
       }
@@ -102,16 +106,7 @@ module.exports = async function* run(players, map) {
       const res = await nextLine(rl);
 
       const [y, x] = res.split(" ", 2).map(e => +e);
-      if (isNaN(y) || isNaN(x) || y < 0 || x < 0 || y > height || x > width) {
-        yield {
-          error: {
-            type: "Invalid",
-            line: res,
-            player: i
-          }
-        };
-        processes.splice(j, 1);
-      } else if (isValid(map, piece, x, y, "OX"[i])) {
+      if (!isNaN(y) && !isNaN(x) && isValid(map, piece, x, y, "OX"[i])) {
         yield {
           turn: {
             pos: [x, y],
@@ -129,6 +124,7 @@ module.exports = async function* run(players, map) {
             player: i
           }
         };
+        process.kill();
         processes.splice(j, 1);
       }
     }

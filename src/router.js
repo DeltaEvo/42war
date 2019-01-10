@@ -1,7 +1,7 @@
 import Vue from "vue";
 import Router from "vue-router";
-import Home from "./views/Home.vue";
-import FillerRun from "./views/FillerRun.vue";
+import Tournament from "./views/Tournament.vue";
+import Run from "./views/Run.vue";
 
 Vue.use(Router);
 
@@ -9,15 +9,30 @@ export default new Router({
   mode: "history",
   base: process.env.BASE_URL,
   routes: [
+    { path: "/", redirect: "/tournament" },
     {
-      path: "/",
-      name: "home",
-      component: Home
+      path: "/tournament",
+      name: "TournamentPage",
+      component: Tournament,
+      meta: {
+        link: true,
+        icon: "trophy",
+        name: "Tournament"
+      }
+    },
+    {
+      path: "/run",
+      name: "RunPage",
+      meta: {
+        link: true,
+        icon: "play",
+        name: "Run"
+      }
     },
     {
       path: "/run/:id",
       name: "run",
-      component: FillerRun,
+      component: Run,
       props: true
     },
     {

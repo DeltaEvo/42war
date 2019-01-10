@@ -4,7 +4,16 @@
 </template>
 
 <script>
-export const COLORS = ["blue", "red", "green"];
+// Material design color palette
+export const COLORS = [
+  "#F44336", // red
+  "#2196F3", // blue
+  "#4CAF50", // green
+  "#FFEB3B", // yellow
+  "#FF9800", // orange
+  "#795548", // brown
+  "#9E9E9E" // gray
+];
 
 export default {
   props: ["data", "turn"],
@@ -41,24 +50,24 @@ export default {
                 cell_width
               );
       }
+      this.context.lineWidth = 3;
       for (const [y, line] of map.entries())
         for (const [x, char] of [...line].entries())
           if (char !== ".") {
             const player = "OX".indexOf(char);
             this.context.fillStyle = COLORS[player];
-            this.context.beginPath();
-            const size = cell_width / 2;
-            this.context.ellipse(
-              x * cell_width + size,
-              y * cell_width + size,
-              size,
-              size,
-              0,
-              0,
-              2 * Math.PI
+            this.context.fillRect(
+              x * cell_width,
+              y * cell_width,
+              cell_width,
+              cell_width
             );
-            this.context.fill();
-            this.context.stroke();
+            this.context.strokeRect(
+              x * cell_width,
+              y * cell_width,
+              cell_width,
+              cell_width
+            );
           }
     }
   },

@@ -55,6 +55,7 @@ export default {
 
         & > .menu {
             flex: 1;
+            text-align: center;
 
             & > .play {
                 color: $gray;
