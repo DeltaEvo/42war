@@ -2,6 +2,7 @@ import Vue from "vue";
 import Router from "vue-router";
 import Tournament from "./views/Tournament.vue";
 import Run from "./views/Run.vue";
+import BattleRoyale from "./views/BattleRoyale.vue";
 
 Vue.use(Router);
 
@@ -18,6 +19,16 @@ export default new Router({
         link: true,
         icon: "trophy",
         name: "Tournament"
+      }
+    },
+    {
+      path: "/battleroyale",
+      name: "BattleRoyalePage",
+      component: BattleRoyale,
+      meta: {
+        link: true,
+        icon: "crown",
+        name: "Battle Royal"
       }
     },
     {

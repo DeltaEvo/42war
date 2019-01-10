@@ -104,8 +104,9 @@ export default {
 };
 </script>
 <style lang="stylus">
+  @import "../stylus/theme.styl"
+
   #home {
-    text-al
     .multiselect__input {
       max-width: 150px;
     }
@@ -127,7 +128,18 @@ export default {
       display: block;
       align-self: flex-start;
       border: none;
-      padding: 0;
+      padding: 1em;
+      border-radius: 50%;
+      box-shadow: 0px 2px 1px -1px rgba(0,0,0,0.2), 0px 1px 1px 0px rgba(0,0,0,0.14), 0px 1px 3px 0px rgba(0,0,0,0.12);
+      margin: 16px;
+      background-color: $color.primary;
+      color: white;
+      width: 35px;
+      height: @width;
+
+      &:hover {
+        background-color: $color.secondary;
+      }
     }
   }
 </style>
