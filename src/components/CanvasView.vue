@@ -19,9 +19,7 @@ export default {
   props: ["data", "turn"],
   mounted() {
     const canvas = this.$el;
-    const { map } = this.data;
-    const height = map.length;
-    const width = map[0].length;
+    const { width, height } = this.data.map;
     this.cell_width = canvas.clientWidth / width;
     this.context = canvas.getContext("2d");
     canvas.width = width * this.cell_width;
@@ -51,24 +49,23 @@ export default {
               );
       }
       this.context.lineWidth = 3;
-      for (const [y, line] of map.entries())
-        for (const [x, char] of [...line].entries())
-          if (char !== ".") {
-            const player = "OX".indexOf(char);
-            this.context.fillStyle = COLORS[player];
-            this.context.fillRect(
-              x * cell_width,
-              y * cell_width,
-              cell_width,
-              cell_width
-            );
-            this.context.strokeRect(
-              x * cell_width,
-              y * cell_width,
-              cell_width,
-              cell_width
-            );
-          }
+      const { spawns } = map;
+      for (const [player, pspawns] of spawns.entries())
+        for (const [x, y] of pspawns) {
+          this.context.fillStyle = COLORS[player];
+          this.context.fillRect(
+            x * cell_width,
+            y * cell_width,
+            cell_width,
+            cell_width
+          );
+          this.context.strokeRect(
+            x * cell_width,
+            y * cell_width,
+            cell_width,
+            cell_width
+          );
+        }
     }
   },
   watch: {

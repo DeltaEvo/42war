@@ -30,6 +30,8 @@
 import CanvasView, { COLORS } from "../components/CanvasView.vue";
 import SlideBar from "vue-slide-bar";
 
+const TIME_PER_TURNS = 25;
+
 export default {
   props: ["id"],
   data() {
@@ -65,7 +67,7 @@ export default {
             clearInterval(interval);
             this.isPlaying = false;
           }
-        }, 50);
+        }, TIME_PER_TURNS);
       }, 500);
       this.isPlaying = true;
       events.addEventListener("turn", ({ data }) =>
@@ -105,7 +107,7 @@ export default {
       this.interval = setInterval(() => {
         this.turn++;
         if (this.turn >= this.data.turns.length) this.pause();
-      }, 50);
+      }, TIME_PER_TURNS);
     },
     pause() {
       if (!this.data.ended) return;

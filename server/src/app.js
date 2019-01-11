@@ -40,20 +40,16 @@ router.get("/players", async ctx => {
 
 const currentGames = new Map();
 
-function runGame(players, id) {
-  const mapFile = path.join(ROOT, "map02");
+function runGame(players, map, id) {
   const game = {
     events: new EventEmiter(),
     turns: [],
     players,
-    map: fs
-      .readFile(mapFile, "utf-8")
-      .then(map => map.split("\n").filter(e => e)),
+    map,
     ended: false
   };
   currentGames.set(id, game);
   (async () => {
-    const map = await game.map;
     const playersBinary = players.map(player =>
       path.join(ROOT, "players", player + EXT)
     );
@@ -74,31 +70,25 @@ function runGame(players, id) {
 }
 
 router.post("/run", bodyParser({ enableTypes: ["json"] }), async ctx => {
-  const { players } = ctx.request.body;
+  const { players, map } = ctx.request.body;
   if (players.some(player => player.includes("."))) {
     throw new Error("Invalid player name");
   }
   const id = uuid();
-  runGame(players, id);
+  runGame(players, map || require("../maps/02.json"), id);
   ctx.body = { id };
 });
 
 router.get("/run/:id", async ctx => {
   const { id } = ctx.params;
   if (currentGames.has(id)) {
-    const {
-      turns,
-      ended,
-      players: playerNames,
-      map: mapPromise
-    } = currentGames.get(id);
+    const { turns, ended, players: playerNames, map } = currentGames.get(id);
     const players = await Promise.all(
       playerNames.map(async name => ({
         name,
         image: await getImageUrl(name)
       }))
     );
-    const map = await mapPromise;
     ctx.body = { turns, ended, players, map };
   } else ctx.status = 404;
 });

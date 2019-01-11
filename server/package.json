@@ -12,6 +12,7 @@
     "koa-bodyparser": "^4.2.1",
     "koa-router": "^7.4.0",
     "koa-static": "^5.0.0",
+    "ndarray": "^1.0.18",
     "node-fetch": "^2.3.0",
     "uuid": "^3.3.2"
   },

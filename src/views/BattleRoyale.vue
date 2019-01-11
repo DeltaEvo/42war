@@ -15,6 +15,7 @@
                 <span>{{ player.name }}</span>
             </div>
         </div>
+        <button @click="run">Run</button>
     </div>
 </template>
 
@@ -31,6 +32,39 @@ export default {
     fetch("/api/players")
       .then(res => res.json())
       .then(players => (this.options = players));
+  },
+  methods: {
+    run() {
+      const SIZE = 200;
+      const PADDING = 5;
+      fetch("/api/run", {
+        body: JSON.stringify({
+          players: this.players.map(({ name }) => name),
+          map: {
+            width: SIZE,
+            height: SIZE,
+            spawns: this.players.map((_, i, { length }) => {
+              return [
+                [
+                  PADDING +
+                    Math.floor((i / (length - 1)) * (SIZE - PADDING * 2)),
+                  PADDING +
+                    Math.floor((i / (length - 1)) * (SIZE - PADDING * 2))
+                ]
+              ];
+            })
+          }
+        }),
+        headers: {
+          "content-type": "application/json"
+        },
+        method: "POST"
+      })
+        .then(res => res.json())
+        .then(({ id }) => {
+          this.$router.push({ name: "run", params: { id } });
+        });
+    }
   },
   components: {
     MultiSelect
